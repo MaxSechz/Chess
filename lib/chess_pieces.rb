@@ -35,13 +35,16 @@ class SlidingPiece < Piece
   def moves
     moves = []
 
-    @board.size.times do |row|
-      @board.size.times do |col|
+    # chess board is 8x8
+    8.times do |row|
+      8.times do |col|
         pos = [row,col]
         next if pos == self.pos
         moves << pos if can_move?(pos)
       end
     end
+
+    moves
   end
 
   def can_move?(pos)

@@ -12,11 +12,14 @@ class Game
     current_player = @white
     until @game_board.checkmate?(current_player.color)
 
+      @game_board.render
+
       start, end_pos = current_player.get_move
       @game_board.move(start, end_pos)
 
       current_player = current_player == @white ? @black : @white
     end
+  end
 
 end
 
