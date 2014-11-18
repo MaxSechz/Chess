@@ -18,12 +18,12 @@ class Piece
     test_board = @board.dup
 
     test_board.move!(@pos, pos)
-    test_board.in_check?(@color)
+    test_board.in_check?(self.color)
   end
 
   def valid_moves
     self.moves.reject do |move|
-      move_into_check?(move) || (@board[move] && @board[move].color == self.color)
+      move_into_check?(move)
     end
   end
 

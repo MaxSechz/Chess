@@ -56,10 +56,9 @@ class Board
 
     @board.each_index do |row|
       @board[row].each_with_index do |piece, col|
-        next if piece.nil?
-
         pos = [row, col]
-        new_piece = piece.dup(dupped_board)
+
+        new_piece = piece.nil? ? nil : piece.dup(dupped_board)
 
         dupped_board[pos] = new_piece
       end
@@ -93,7 +92,7 @@ class Board
   def checkmate?(color)
     return false unless in_check?(color)
 
-    all_moves(color).empty?
+    all_valid_moves(color).empty?
   end
 
   def in_check?(color)
@@ -110,10 +109,20 @@ class Board
     all_moves = []
 
     all_pieces(color).each do |piece|
-      all_moves << piece.moves
+      all_moves += piece.moves
     end
 
-    all_moves.flatten.uniq
+    all_moves.uniq
+  end
+
+  def all_valid_moves(color)
+    all_moves = []
+
+    all_pieces(color).each do |piece|
+      all_moves += piece.valid_moves
+    end
+
+    all_moves.uniq
   end
 
   def all_pieces(color)

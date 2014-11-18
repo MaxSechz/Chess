@@ -2,6 +2,7 @@ require_relative 'board.rb'
 
 class Game
 
+  attr_reader :game_board
   def initialize(white, black)
     @white, @black = white, black
 
@@ -50,8 +51,8 @@ class HumanPlayer
 
   def convert(position)
     first = position[0].ord - 'a'.ord
-    second = position[1].to_i - 1
-    [first, second]
+    second = 8 - position[1].to_i
+    [second, first]
   end
 
 end
