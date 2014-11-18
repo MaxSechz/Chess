@@ -23,7 +23,7 @@ class Piece
 
   def valid_moves
     self.moves.reject do |move|
-      move_into_check?(move) || (@board[move] && @board[move].color == @color)
+      move_into_check?(move) || (@board[move] && @board[move].color == self.color)
     end
   end
 
@@ -35,12 +35,15 @@ class SlidingPiece < Piece
   def moves
     moves = []
 
-    # chess board is 8x8
-    8.times do |row|
-      8.times do |col|
-        pos = [row,col]
-        next if pos == self.pos
-        moves << pos if can_move?(pos)
+    self.class::DELTAS.each do |(dx,dy)|
+      x, y = @pos
+      while true
+        x += dx
+        y += dy
+        break unless x.between?(0,7) && y.between?(0,7)
+        break if @board[[x,y]] && @board[[x,y]].color == self.color
+        moves << [x, y]
+        break if @board[[x,y]] && @board[[x,y]].color == @board.enemy_color(self.color)
       end
     end
 
@@ -54,9 +57,12 @@ end
 
 class Rook < SlidingPiece
 
-  def can_move?(pos)
-    self.pos.first == pos.first || self.pos.last == pos.last
-  end
+  DELTAS = [
+            [1,0],
+            [-1,0],
+            [0,1],
+            [0,-1],
+          ]
 
   def render
     color == :white ? 'r' : "R"
@@ -66,9 +72,12 @@ end
 
 class Bishop < SlidingPiece
 
-  def can_move?(pos)
-    (self.pos.first - pos.first).abs == (self.pos.last - pos.last).abs
-  end
+  DELTAS = [
+            [1,-1],
+            [-1,1],
+            [1,1],
+            [-1,-1]
+            ]
 
   def render
     color == :white ? 'b' : "B"
@@ -78,10 +87,16 @@ end
 
 class Queen < SlidingPiece
 
-  def can_move?(pos)
-    self.pos.first == pos.first || self.pos.last == pos.last ||
-    (self.pos.first - pos.first).abs == (self.pos.last - pos.last).abs
-  end
+  DELTAS = [
+            [1,0],
+            [-1,0],
+            [0,1],
+            [0,-1],
+            [1,-1],
+            [-1,1],
+            [1,1],
+            [-1,-1]
+            ]
 
   def render
     color == :white ? 'q' : "Q"
@@ -96,7 +111,10 @@ class SteppingPiece < Piece
 
     x, y = @pos
     self.class::DELTAS.each do |(dx,dy)|
-      moves << [x + dx, y + dy]
+      new_move = [x + dx, y + dy]
+      next unless new_move.all? { |el| el.between?(0,7) }
+      next if @board[new_move] && @board[new_move].color == self.color
+      moves << new_move
     end
 
     moves
@@ -148,6 +166,7 @@ class Pawn < Piece
 
   def initialize(pos, board, color)
     super
+    @start = @pos
     @moved = false
   end
 
@@ -155,9 +174,9 @@ class Pawn < Piece
     moves = []
 
     if @color == :white
-      unless @board[pos[0] - 1, pos[1]]
+      unless @board[[pos[0] - 1, pos[1]]]
         moves << [pos[0] - 1, pos[1]]
-        moves << [pos[0] - 2, pos[1]] unless @moved || @board[pos[0] - 2, pos[1]]
+        moves << [pos[0] - 2, pos[1]] unless @start != @pos || @board[[pos[0] - 2, pos[1]]]
       end
       # find diagonals
       # check diagonals for enemy pieces
@@ -167,9 +186,9 @@ class Pawn < Piece
         @board[diagonal].color == :black
       end
     else
-      unless @board[pos[0] + 1, pos[1]]
+      unless @board[[pos[0] + 1, pos[1]]]
         moves << [pos[0] + 1, pos[1]]
-        moves << [pos[0] + 2, pos[1]] unless @moved || @board[pos[0] + 2, pos[1]]
+        moves << [pos[0] + 2, pos[1]] unless @start != @pos || @board[[pos[0] + 2, pos[1]]]
       end
       diagonals = [[pos[0] + 1, pos[1] - 1], [pos[0] + 1, pos[1] + 1]]
       moves += diagonals.select do |diagonal|

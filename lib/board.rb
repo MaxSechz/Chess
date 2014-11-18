@@ -97,7 +97,7 @@ class Board
   end
 
   def in_check?(color)
-    king = all_pieces(color).select {|piece| piece.is_a?(King)}.first
+    king = all_pieces(color).select { |piece| piece.is_a?(King) }.first
 
     all_moves(enemy_color(color)).include?(king.pos)
   end

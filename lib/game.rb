@@ -10,15 +10,24 @@ class Game
 
   def run
     current_player = @white
-    until @game_board.checkmate?(current_player.color)
+
+    begin
 
       @game_board.render
 
       start, end_pos = current_player.get_move
+
+      raise "Not your piece" if @game_board[start].color != current_player.color
+
       @game_board.move(start, end_pos)
 
+
       current_player = current_player == @white ? @black : @white
-    end
+    rescue
+      puts "try again"
+      retry
+
+    end until @game_board.checkmate?(current_player.color)
   end
 
 end
