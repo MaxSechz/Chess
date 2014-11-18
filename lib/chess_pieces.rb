@@ -155,8 +155,10 @@ class Pawn < Piece
     moves = []
 
     if @color == :white
-      moves << [pos[0] - 1, pos[1]]
-      moves << [pos[0] - 2, pos[1]] unless @moved
+      unless @board[pos[0] - 1, pos[1]]
+        moves << [pos[0] - 1, pos[1]]
+        moves << [pos[0] - 2, pos[1]] unless @moved || @board[pos[0] - 2, pos[1]]
+      end
       # find diagonals
       # check diagonals for enemy pieces
       diagonals = [[pos[0] - 1, pos[1] - 1], [pos[0] - 1, pos[1] + 1]]
@@ -165,8 +167,10 @@ class Pawn < Piece
         @board[diagonal].color == :black
       end
     else
-      moves << [pos[0] + 1, pos[1]]
-      moves << [pos[0] + 2, pos[1]] unless @moved
+      unless @board[pos[0] + 1, pos[1]]
+        moves << [pos[0] + 1, pos[1]]
+        moves << [pos[0] + 2, pos[1]] unless @moved || @board[pos[0] + 2, pos[1]]
+      end
       diagonals = [[pos[0] + 1, pos[1] - 1], [pos[0] + 1, pos[1] + 1]]
       moves += diagonals.select do |diagonal|
         @board[diagonal] &&
