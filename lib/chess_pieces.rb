@@ -27,7 +27,7 @@ class Piece
     end
   end
 
-  def enemy?(piece)
+  def is_enemy?(piece)
     self.color != piece.color
   end
 
@@ -47,7 +47,7 @@ class SlidingPiece < Piece
         y += dy
       end
       # check if enemy piece in [x, y], and add it
-      moves << [x, y] if @board[[x,y]] && @board[[x,y]].enemy?(self)
+      moves << [x, y] if @board[[x,y]] && @board[[x,y]].is_enemy?(self)
     end
 
     moves
@@ -111,10 +111,9 @@ class SteppingPiece < Piece
 
     x, y = @pos
     self.class::DELTAS.each do |(dx,dy)|
-      new_move = [x + dx, y + dy]
-      next unless new_move.all? { |el| el.between?(0,7) }
-      next if @board[new_move] && @board[new_move].color == self.color
-      moves << new_move
+      move = [x + dx, y + dy]
+      next unless move.all? { |el| el.between?(0,7) }
+      moves << move if @board[move].nil? || @board[move].is_enemy?(self)
     end
 
     moves
@@ -193,7 +192,7 @@ class Pawn < Piece
 
     DIAGONALS.each do |(dx, dy)|
       move = [x.send(operator, dx), y + dy]
-      moves << move unless @board[move].nil?
+      moves << move if @board[move] && @board[move].is_enemy?(self)
     end
 
     moves
