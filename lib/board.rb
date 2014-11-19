@@ -1,10 +1,24 @@
 require_relative 'chess_pieces.rb'
 
-class PieceSelectionError < StandardError
+class ChessError < StandardError
 end
-class InCheckError < StandardError
+
+class PieceSelectionError < ChessError
+  def message
+    "You chose an empty spot!"
+  end
 end
-class InvalidMoveError < StandardError
+class InCheckError < ChessError
+  def message
+    "You're still in check!"
+  end
+end
+class InvalidMoveError < ChessError
+  def message
+    "Invalid move!"
+  end
+end
+class InvalidPositionError < ChessError
 end
 
 
@@ -18,9 +32,11 @@ class Board
 
   def move(start, end_pos)
     piece = self[start]
+
     raise PieceSelectionError if piece.nil?
     raise InCheckError if piece.move_into_check?(end_pos)
     raise InvalidMoveError unless piece.valid_moves.include?(end_pos)
+
     self[start] = nil
     self[end_pos] = piece
     piece.pos = end_pos
@@ -28,7 +44,7 @@ class Board
 
   def move!(start, end_pos)
     piece = self[start]
-    raise "No piece was selected" if piece.nil?
+    raise PieceSelectionError if piece.nil?
 
     self[start] = nil
     self[end_pos] = piece
@@ -77,7 +93,7 @@ class Board
 
   def []=(pos, value)
     x,y = pos
-    raise "Cannot add to invalid position" unless x.between?(0,7) && y.between?(0,7)
+    raise InvalidPositionError unless x.between?(0,7) && y.between?(0,7)
     @board[x][y] = value
   end
 
@@ -135,13 +151,13 @@ class Board
   end
 
   def all_valid_moves(color)
-    all_moves = []
+    all_valid_moves = []
 
     all_pieces(color).each do |piece|
-      all_moves += piece.valid_moves
+      all_valid_moves += piece.valid_moves
     end
 
-    all_moves.uniq
+    all_valid_moves.uniq
   end
 
   def all_pieces(color)

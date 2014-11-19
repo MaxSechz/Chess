@@ -1,6 +1,9 @@
 require_relative 'board.rb'
 
-class EnemyPieceError < StandardError
+class EnemyPieceError < ChessError
+  def message
+    "You chose an enemy piece!"
+  end
 end
 
 class Game
@@ -24,22 +27,26 @@ class Game
 
       @game_board.move(start, end_pos)
 
-
       current_player = current_player == @white ? @black : @white
-    rescue PieceSelectionError
-      puts "You chose an empty spot!"
-      retry
 
-    rescue EnemyPieceError
-      puts "You chose an enemy piece!"
+    # rescue errors
+  rescue ChessError => e
+    puts e.message
 
-    rescue InCheckError
-      puts "You're still in check!"
-      retry
-
-    rescue InvalidMoveError
-      puts "Invalid move!"
-      retry
+    #   PieceSelectionError
+    #   puts "You chose an empty spot!"
+    #   retry
+    #
+    # rescue EnemyPieceError
+    #   puts "You chose an enemy piece!"
+    #
+    # rescue InCheckError
+    #   puts "You're still in check!"
+    #   retry
+    #
+    # rescue InvalidMoveError
+    #   puts "Invalid move!"
+    #   retry
 
     end until @game_board.checkmate?(current_player.color)
   end
