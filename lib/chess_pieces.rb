@@ -1,14 +1,15 @@
 # encoding: utf-8
 
 class Piece
-  attr_writer :pos
-  attr_reader :pos, :color
+  attr_writer :pos, :has_moved
+  attr_reader :pos, :color, :has_moved
 
 
-  def initialize(pos, board, color)
+  def initialize(pos, board, color, has_moved = false)
     @pos, @board, @color = pos, board, color
     #piece places self
     @board[@pos] = self
+    @has_moved = has_moved
   end
 
   def moves
@@ -159,6 +160,55 @@ class King < SteppingPiece
             [-1,-1]
             ]
 
+  def valid_moves
+    moves = super
+
+    # find rooks that can castle
+    # based on rooks, add move
+
+    right_castle = [@pos.first, @pos.last + 2]
+    left_castle = [@pos.first, @pos.last - 2]
+
+    moves << right_castle if can_castle?(get_rooks[1])
+    moves << left_castle if can_castle?(get_rooks[0])
+    moves
+  end
+
+  def get_rooks
+    rooks = @board.all_pieces(@color).select do |piece|
+      piece.is_a?(Rook) && !piece.has_moved
+    end
+
+    right_rook = rooks.select { |rook| rook.pos[1] == 7 }.first
+    left_rook = rooks.select { |rook| rook.pos[1] == 0 }.first
+
+    [left_rook, right_rook]
+  end
+
+  def can_castle?(rook)
+    return false if move_into_check?(@pos)
+    return false if @has_moved
+    return false if rook.nil?
+
+
+    if self.pos[1] < rook.pos[1]
+      (self.pos[1] + 1...rook.pos[1]).each do |col|
+        space_pos = [self.pos[0], col]
+        return false if @board[space_pos] || move_into_check?(space_pos)
+      end
+
+    else
+      (rook.pos[1] + 1...self.pos[1]).each do |col|
+        space_pos = [self.pos[0], col]
+        return false if @board[space_pos] ||
+                        (col > 1 && move_into_check?(space_pos))
+      end
+    end
+
+    true
+  end
+
+
   def render
     color == :white ? '♔' : '♚'
   end
@@ -176,11 +226,6 @@ class Pawn < Piece
               [1,0],
               [2,0]
              ]
-
-  def initialize(pos, board, color)
-    super
-    @start = @pos
-  end
 
   def moves
     forward_moves + diag_moves
@@ -200,7 +245,7 @@ class Pawn < Piece
     FORWARDS.each do |(dx, dy)|
       move = [x.send(operator, dx), y + dy]
       moves << move unless @board[move]
-      break unless @start == @pos # don't count second move if already moved
+      break if @has_moved # don't count second move if already moved
     end
 
     moves

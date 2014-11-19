@@ -21,6 +21,9 @@ class InvalidMoveError < ChessError
   end
 end
 
+class PromotionError < ChessError
+end
+
 class InvalidPositionError < ChessError
 end
 
@@ -40,21 +43,51 @@ class Board
     raise InCheckError if piece.move_into_check?(end_pos)
     raise InvalidMoveError unless piece.valid_moves.include?(end_pos)
 
-    #call move!
-    self[start] = nil
-    self[end_pos] = piece
-    piece.pos = end_pos
+    move!(start, end_pos)
+    promote(piece) if piece.is_a?(Pawn) && (end_pos[0] == 0 || end_pos[0] == 7)
   end
 
   def move!(start, end_pos)
     piece = self[start]
     raise PieceSelectionError if piece.nil?
+    piece.has_moved = true
+
+    castle(piece, start, end_pos) if piece.is_a?(King)
 
     self[start] = nil
     self[end_pos] = piece
     piece.pos = end_pos
   end
 
+  def promote(pawn)
+    puts 'What would you like to promote your pawn to?'
+    begin
+
+      response = Object.const_get(gets.chomp.capitalize)
+      if response == King || response == Pawn
+        raise PromotionError.new("Cannot promote to #{response}")
+      end
+    rescue PromotionError => e
+      puts e.message
+      retry
+    end
+
+    response.new(pawn.pos, self, pawn.color, true)
+  end
+
+  def castle(king, start, end_pos)
+    difference = start[1] - end_pos[1]
+    return if difference.abs == 1
+
+    if difference > 0
+      rook = self[[king.pos[0],0]]
+      move!(rook.pos, [rook.pos[0], rook.pos[1] + 3])
+    else
+      rook_pos = [king.pos.first, 7]
+
+      move!(rook_pos, [rook_pos[0], rook_pos[1] - 2])
+    end
+  end
   # have each piece place itself on board
   def dup
     dupped_board = Board.new
@@ -114,6 +147,9 @@ class Board
     all_moves(enemy_color(color)).include?(king.pos)
   end
 
+  def all_pieces(color)
+    @board.flatten.select { |piece| piece && piece.color == color }
+  end
 
   private
 
@@ -156,10 +192,6 @@ class Board
     all_pieces(color).each { |piece| all_valid_moves += piece.valid_moves }
 
     all_valid_moves.uniq
-  end
-
-  def all_pieces(color)
-    @board.flatten.select { |piece| piece && piece.color == color }
   end
 
 end
