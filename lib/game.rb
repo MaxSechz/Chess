@@ -1,5 +1,8 @@
 require_relative 'board.rb'
 
+class EnemyPieceError < StandardError
+end
+
 class Game
 
   attr_reader :game_board
@@ -16,14 +19,26 @@ class Game
 
       start, end_pos = current_player.get_move(@game_board)
 
-      raise "Not your piece" if @game_board[start].color != current_player.color
+      raise EnemyPieceError if @game_board[start] &&
+                               @game_board[start].color != current_player.color
 
       @game_board.move(start, end_pos)
 
 
       current_player = current_player == @white ? @black : @white
-    rescue
-      puts "try again"
+    rescue PieceSelectionError
+      puts "You chose an empty spot!"
+      retry
+
+    rescue EnemyPieceError
+      puts "You chose an enemy piece!"
+
+    rescue InCheckError
+      puts "You're still in check!"
+      retry
+
+    rescue InvalidMoveError
+      puts "Invalid move!"
       retry
 
     end until @game_board.checkmate?(current_player.color)
@@ -42,12 +57,12 @@ class HumanPlayer
   def get_move(game_board)
     game_board.render
     puts "#{@color.to_s.capitalize}'s turn"
-    puts "You are in check" if game_board.in_check(@color)
+    puts "You are in check" if game_board.in_check?(@color)
     puts "Which piece would you like to move?"
     start = gets.chomp.split('')
     puts "Where would you like to move it?"
     end_pos = gets.chomp.split('')
-    [convert(start), convert(end_pos)]
+    return [convert(start), convert(end_pos)]
   end
 
   def convert(position)

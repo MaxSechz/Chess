@@ -1,5 +1,13 @@
 require_relative 'chess_pieces.rb'
 
+class PieceSelectionError < StandardError
+end
+class InCheckError < StandardError
+end
+class InvalidMoveError < StandardError
+end
+
+
 class Board
 
   def initialize
@@ -34,9 +42,9 @@ class Board
 
   def move(start, end_pos)
     piece = self[start]
-    raise "No piece was selected" if piece.nil?
-    raise "Puts you into check" if piece.move_into_check?(end_pos)
-    raise "Invalid move" unless piece.valid_moves.include?(end_pos)
+    raise PieceSelectionError if piece.nil?
+    raise InCheckError if piece.move_into_check?(end_pos)
+    raise InvalidMoveError unless piece.valid_moves.include?(end_pos)
     self[start] = nil
     self[end_pos] = piece
     piece.pos = end_pos
