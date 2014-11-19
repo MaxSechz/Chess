@@ -54,7 +54,7 @@ class HumanPlayer
     start = gets.chomp.split('')
     puts "Where would you like to move it?"
     end_pos = gets.chomp.split('')
-    return [convert(start), convert(end_pos)]
+    [convert(start), convert(end_pos)]
   end
 
   def convert(position)
