@@ -10,10 +10,10 @@ class Game
 
   attr_reader :game_board
 
-  def initialize(white, black)
+  def initialize(white, black, board = nil)
     @white, @black = white, black
-
-    @game_board = Board.new
+    board ||= Board.new
+    @game_board = board
   end
 
   def run
@@ -33,7 +33,7 @@ class Game
 
     end_game
   end
-  
+
 
   private
 

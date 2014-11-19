@@ -110,6 +110,7 @@ class Queen < SlidingPiece
   end
 
 end
+
 #king knight
 class SteppingPiece < Piece
 
