@@ -29,24 +29,9 @@ class Game
 
       current_player = current_player == @white ? @black : @white
 
-    # rescue errors
-  rescue ChessError => e
-    puts e.message
-
-    #   PieceSelectionError
-    #   puts "You chose an empty spot!"
-    #   retry
-    #
-    # rescue EnemyPieceError
-    #   puts "You chose an enemy piece!"
-    #
-    # rescue InCheckError
-    #   puts "You're still in check!"
-    #   retry
-    #
-    # rescue InvalidMoveError
-    #   puts "Invalid move!"
-    #   retry
+    rescue ChessError => e
+      puts e.message
+      retry
 
     end until @game_board.checkmate?(current_player.color)
   end
