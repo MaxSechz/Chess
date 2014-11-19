@@ -1,5 +1,11 @@
 # encoding: utf-8
 
+class ChessError < StandardError
+end
+
+class PromotionError < ChessError
+end
+
 class Piece
   attr_writer :pos, :has_moved
   attr_reader :pos, :color, :has_moved
@@ -160,6 +166,20 @@ class King < SteppingPiece
             [-1,-1]
             ]
 
+  def castle(start, end_pos)
+    difference = start[1] - end_pos[1]
+    return if difference.abs == 1
+
+    if difference > 0
+      rook_pos = [@pos.first, 0]
+      @board.move!(rook_pos, [rook_pos[0], rook_pos[1] + 3])
+    else
+      rook_pos = [@pos.first, 7]
+
+      @board.move!(rook_pos, [rook_pos[0], rook_pos[1] - 2])
+    end
+  end
+
   def valid_moves
     moves = super
 
@@ -235,6 +255,30 @@ class Pawn < Piece
     color == :white ? '♙' : "♟"
   end
 
+  def en_passant(start)
+    passant_pawn = @board[[start[0], @pos[1]]]
+    return if passant_pawn.nil?
+    if passant_pawn.is_enemy?(self) && passant_pawn.has_moved == :two_spaces
+      @board[[start[0], @pos[1]]] = nil
+    end
+  end
+
+
+  def promote
+    puts 'What would you like to promote your pawn to?'
+    begin
+      response = Object.const_get(gets.chomp.capitalize)
+      if response == King || response == Pawn
+        raise PromotionError.new("Cannot promote to #{response}")
+      end
+    rescue PromotionError => e
+      puts e.message
+      retry
+    end
+
+    response.new(@pos, @board, @color, true)
+  end
+
   private
 
   def forward_moves
@@ -258,6 +302,9 @@ class Pawn < Piece
     x, y = @pos
     DIAGONALS.each do |(dx, dy)|
       move = [x.send(operator, dx), y + dy]
+      passant_pawn = @board[[x, y + dy]]
+      moves << move if passant_pawn && passant_pawn.is_enemy?(self) &&
+                       passant_pawn.has_moved == :two_spaces
       moves << move if @board[move] && @board[move].is_enemy?(self)
     end
 

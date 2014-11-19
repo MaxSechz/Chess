@@ -20,7 +20,7 @@ class Game
 
   def run
 
-    until @game_board.checkmate?(@current_player.color)
+    until over?
       begin
         start, end_pos = @current_player.get_move(@game_board)
         if start == :save
@@ -51,13 +51,23 @@ class Game
 
   private
 
+  def over?
+    @game_board.checkmate?(@current_player.color) ||
+    @game_board.stalemate?(@current_player.color)
+  end
+
   def end_game
     # current player is in checkmate
-    switch_player
+    if @game_board.stalemate?(@current_player.color)
+      puts "Stalemate"
+    else
+      switch_player
 
-    puts "Congratulations, #{@current_player.color.to_s.capitalize}!"
-    puts "You won!"
+      puts "Congratulations, #{@current_player.color.to_s.capitalize}!"
+      puts "You won!"
+    end
   end
+
 
   def switch_player
     @current_player = @current_player == @white ? @black : @white
