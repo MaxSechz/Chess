@@ -16,30 +16,6 @@ class Board
     initialize_sides
   end
 
-  def initialize_sides
-    initialize_pieces(:white)
-    initialize_pieces(:black)
-  end
-
-
-  def initialize_pieces(color)
-    back_row, front_row = (color == :white ? [7,6] : [0,1])
-
-    @board[front_row].map!.with_index do |piece, col|
-       Pawn.new([front_row,col], self, color)
-    end
-
-    @board[back_row].map!.with_index do |piece, col|
-      case col
-      when 0, 7 then Rook.new([back_row, col], self, color)
-      when 1, 6 then Knight.new([back_row, col], self, color)
-      when 2, 5 then Bishop.new([back_row, col], self, color)
-      when 3    then Queen.new([back_row, col], self, color)
-      when 4    then King.new([back_row, col], self, color)
-      end
-    end
-  end
-
   def move(start, end_pos)
     piece = self[start]
     raise PieceSelectionError if piece.nil?
@@ -77,13 +53,19 @@ class Board
 
 
   def render
-    @board.each do |row|
+    puts "   " + ('A'..'H').to_a.join("   ")
+    puts " ┌" + "───┬" * 7 + "───┐"
+    @board.each_with_index do |row, index|
+      print (8-index).to_s
       row.each do |piece|
-        print piece.nil? ? " " : piece.render
+        print piece.nil? ? "│   " : "│ #{piece.render} "
       end
+      print "│" + (8-index).to_s
       puts
+      puts " ├" + "───┼" * 7 + "───┤" unless index == 7
     end
-    nil
+    puts " └" + "───┴" * 7 + "───┘"
+    puts "   " + ('A'..'H').to_a.join("   ")
   end
 
 
@@ -109,6 +91,33 @@ class Board
     king = all_pieces(color).select { |piece| piece.is_a?(King) }.first
 
     all_moves(enemy_color(color)).include?(king.pos)
+  end
+
+
+  private
+
+  def initialize_sides
+    initialize_pieces(:white)
+    initialize_pieces(:black)
+  end
+
+
+  def initialize_pieces(color)
+    back_row, front_row = (color == :white ? [7,6] : [0,1])
+
+    @board[front_row].map!.with_index do |piece, col|
+       Pawn.new([front_row,col], self, color)
+    end
+
+    @board[back_row].map!.with_index do |piece, col|
+      case col
+      when 0, 7 then Rook.new([back_row, col], self, color)
+      when 1, 6 then Knight.new([back_row, col], self, color)
+      when 2, 5 then Bishop.new([back_row, col], self, color)
+      when 3    then Queen.new([back_row, col], self, color)
+      when 4    then King.new([back_row, col], self, color)
+      end
+    end
   end
 
   def enemy_color(color)
@@ -145,5 +154,4 @@ class Board
 
     pieces
   end
-
 end

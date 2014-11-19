@@ -1,3 +1,4 @@
+# encoding: utf-8
 class Piece
   attr_writer :pos
   attr_reader :pos, :color
@@ -27,6 +28,8 @@ class Piece
     end
   end
 
+  protected
+  
   def is_enemy?(piece)
     self.color != piece.color
   end
@@ -65,7 +68,7 @@ class Rook < SlidingPiece
           ]
 
   def render
-    color == :white ? 'r' : "R"
+    color == :white ? '♖' : "♜"
   end
 
 end
@@ -80,7 +83,7 @@ class Bishop < SlidingPiece
             ]
 
   def render
-    color == :white ? 'b' : "B"
+    color == :white ? '♗' : "♝"
   end
 
 end
@@ -99,7 +102,7 @@ class Queen < SlidingPiece
             ]
 
   def render
-    color == :white ? 'q' : "Q"
+    color == :white ? '♕' : "♛"
   end
 
 end
@@ -137,7 +140,7 @@ class Knight < SteppingPiece
             ]
 
   def render
-    color == :white ? 'n' : "N"
+    color == :white ? '♘' : "♞"
   end
 
 end
@@ -156,7 +159,7 @@ class King < SteppingPiece
             ]
 
   def render
-    color == :white ? 'k' : "K"
+    color == :white ? '♔' : '♚'
   end
 
 end
@@ -179,8 +182,17 @@ class Pawn < Piece
   end
 
   def moves
-    moves = []
+    forward_moves + diag_moves
+  end
 
+  def render
+    color == :white ? '♙' : "♟"
+  end
+
+  private
+
+  def forward_moves
+    moves = []
     operator = @color == :white ? :- : :+ # metaprogramming!!
 
     x, y = @pos
@@ -190,6 +202,14 @@ class Pawn < Piece
       break unless @start == @pos # don't count second move if already moved
     end
 
+    moves
+  end
+
+  def diag_moves
+    moves = []
+    operator = @color == :white ? :- : :+ # metaprogramming!!
+
+    x, y = @pos
     DIAGONALS.each do |(dx, dy)|
       move = [x.send(operator, dx), y + dy]
       moves << move if @board[move] && @board[move].is_enemy?(self)
@@ -198,8 +218,5 @@ class Pawn < Piece
     moves
   end
 
-  def render
-    color == :white ? 'p' : "P"
-  end
 
 end
