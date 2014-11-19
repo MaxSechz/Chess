@@ -81,11 +81,13 @@ class Board
 
   def [](pos)
     x,y = pos
+    return nil unless x.between?(0,7) && y.between?(0,7)
     @board[x][y]
   end
 
   def []=(pos, value)
     x,y = pos
+    raise "Cannot add to invalid position" unless x.between?(0,7) && y.between?(0,7)
     @board[x][y] = value
   end
 

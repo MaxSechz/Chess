@@ -27,6 +27,10 @@ class Piece
     end
   end
 
+  def enemy?(piece)
+    self.color != piece.color
+  end
+
 end
 
 # bishop, rook, queen
@@ -36,21 +40,17 @@ class SlidingPiece < Piece
     moves = []
 
     self.class::DELTAS.each do |(dx,dy)|
-      x, y = @pos
-      while true
+      x, y = @pos[0] + dx, @pos[1] + dy
+      while x.between?(0,7) && y.between?(0,7) && @board[[x, y]].nil?
+        moves << [x, y]
         x += dx
         y += dy
-        break unless x.between?(0,7) && y.between?(0,7)
-        break if @board[[x,y]] && @board[[x,y]].color == self.color
-        moves << [x, y]
-        break if @board[[x,y]] && @board[[x,y]].color == @board.enemy_color(self.color)
       end
+      # check if enemy piece in [x, y], and add it
+      moves << [x, y] if @board[[x,y]] && @board[[x,y]].enemy?(self)
     end
 
     moves
-  end
-
-  def can_move?(pos)
   end
 
 end
@@ -164,40 +164,38 @@ end
 
 class Pawn < Piece
 
+  DIAGONALS = [
+               [1,1],
+               [1,-1]
+              ]
+
+  FORWARDS = [
+              [1,0],
+              [2,0]
+             ]
+
   def initialize(pos, board, color)
     super
     @start = @pos
-    @moved = false
   end
 
   def moves
     moves = []
 
-    if @color == :white
-      unless @board[[pos[0] - 1, pos[1]]]
-        moves << [pos[0] - 1, pos[1]]
-        moves << [pos[0] - 2, pos[1]] unless @start != @pos || @board[[pos[0] - 2, pos[1]]]
-      end
-      # find diagonals
-      # check diagonals for enemy pieces
-      diagonals = [[pos[0] - 1, pos[1] - 1], [pos[0] - 1, pos[1] + 1]]
-      moves += diagonals.select do |diagonal|
-        @board[diagonal] &&
-        @board[diagonal].color == :black
-      end
-    else
-      unless @board[[pos[0] + 1, pos[1]]]
-        moves << [pos[0] + 1, pos[1]]
-        moves << [pos[0] + 2, pos[1]] unless @start != @pos || @board[[pos[0] + 2, pos[1]]]
-      end
-      diagonals = [[pos[0] + 1, pos[1] - 1], [pos[0] + 1, pos[1] + 1]]
-      moves += diagonals.select do |diagonal|
-        @board[diagonal] &&
-        @board[diagonal].color == :white
-      end
+    operator = @color == :white ? :- : :+ # metaprogramming!!
+
+    x, y = @pos
+    FORWARDS.each do |(dx, dy)|
+      move = [x.send(operator, dx), y + dy]
+      moves << move unless @board[move]
+      break unless @start == @pos # don't count second move if already moved
     end
 
-    @moved = true
+    DIAGONALS.each do |(dx, dy)|
+      move = [x.send(operator, dx), y + dy]
+      moves << move unless @board[move].nil?
+    end
+
     moves
   end
 
