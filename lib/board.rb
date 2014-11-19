@@ -37,30 +37,30 @@ class Board
     piece = self[start]
 
     raise PieceSelectionError if piece.nil?
+    # potential board change from these checks for computer player
     raise InCheckError if piece.move_into_check?(end_pos)
     raise InvalidMoveError unless piece.valid_moves.include?(end_pos)
 
     move!(start, end_pos)
+    if piece.is_a?(Pawn) && (start[0] - end_pos[0]).abs == 2
+      piece.has_moved = :two_spaces
+    else
+      piece.has_moved = true
+    end
     piece.en_passant(start) if piece.is_a?(Pawn)
     piece.promote if piece.is_a?(Pawn) && (end_pos[0] == 0 || end_pos[0] == 7)
   end
 
   def move!(start, end_pos)
     piece = self[start]
-    raise PieceSelectionError if piece.nil?
-    if piece.is_a?(Pawn) && (start[0] - end_pos[0]).abs == 2
-      piece.has_moved = :two_spaces
-    else
-      piece.has_moved = true
-    end
-
-
+    # raise PieceSelectionError if piece.nil?
 
     piece.castle(start, end_pos) if piece.is_a?(King)
 
     self[start] = nil
     self[end_pos] = piece
     piece.pos = end_pos
+
   end
 
   # have each piece place itself on board

@@ -118,4 +118,28 @@ end
 
 class ComputerPlayer
 
+  attr_reader :color
+
+  def initialize(color)
+    @color = color
+  end
+
+  def get_move(game_board)
+    @game_board = game_board
+
+    game_board.render
+    puts "#{@color.to_s.capitalize}'s turn"
+    puts "You are in check" if game_board.in_check?(@color)
+
+    while true
+      piece = @game_board.all_pieces(@color).sample
+
+      move = piece.valid_moves.sample
+
+      break unless move.nil?
+    end
+    sleep 1
+    [piece.pos, move]
+  end
+
 end

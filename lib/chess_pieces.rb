@@ -25,13 +25,16 @@ class Piece
   def dup(board)
     self.class.new(@pos, board, @color)
   end
-
+############################################
   def move_into_check?(pos)
     test_board = @board.dup
-
-    test_board.move!(@pos, pos)
+    p test_board[self.pos].class
+    p self.pos
+    p pos
+    test_board.move!(self.pos, pos)
     test_board.in_check?(self.color)
   end
+############################################
 
   def valid_moves
     self.moves.reject { |move| move_into_check?(move) }
@@ -288,7 +291,7 @@ class Pawn < Piece
     x, y = @pos
     FORWARDS.each do |(dx, dy)|
       move = [x.send(operator, dx), y + dy]
-      moves << move unless @board[move]
+      moves << move unless @board[move] || @board[[x.send(operator, 1), y + dy]]
       break if @has_moved # don't count second move if already moved
     end
 
