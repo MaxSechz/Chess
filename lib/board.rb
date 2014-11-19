@@ -8,16 +8,19 @@ class PieceSelectionError < ChessError
     "You chose an empty spot!"
   end
 end
+
 class InCheckError < ChessError
   def message
     "You're still in check!"
   end
 end
+
 class InvalidMoveError < ChessError
   def message
     "Invalid move!"
   end
 end
+
 class InvalidPositionError < ChessError
 end
 
@@ -37,6 +40,7 @@ class Board
     raise InCheckError if piece.move_into_check?(end_pos)
     raise InvalidMoveError unless piece.valid_moves.include?(end_pos)
 
+    #call move!
     self[start] = nil
     self[end_pos] = piece
     piece.pos = end_pos
@@ -51,6 +55,7 @@ class Board
     piece.pos = end_pos
   end
 
+  # have each piece place itself on board
   def dup
     dupped_board = Board.new
 
@@ -104,13 +109,17 @@ class Board
   end
 
   def in_check?(color)
-    king = all_pieces(color).select { |piece| piece.is_a?(King) }.first
+    king = find_king(color)
 
     all_moves(enemy_color(color)).include?(king.pos)
   end
 
 
   private
+
+  def find_king(color)
+    all_pieces(color).select { |piece| piece.is_a?(King) }.first
+  end
 
   def initialize_sides
     initialize_pieces(:white)
@@ -119,20 +128,13 @@ class Board
 
 
   def initialize_pieces(color)
+    row = [Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook]
     back_row, front_row = (color == :white ? [7,6] : [0,1])
 
-    @board[front_row].map!.with_index do |piece, col|
-       Pawn.new([front_row,col], self, color)
-    end
+    8.times { |col| Pawn.new([front_row, col], self, color) }
 
-    @board[back_row].map!.with_index do |piece, col|
-      case col
-      when 0, 7 then Rook.new([back_row, col], self, color)
-      when 1, 6 then Knight.new([back_row, col], self, color)
-      when 2, 5 then Bishop.new([back_row, col], self, color)
-      when 3    then Queen.new([back_row, col], self, color)
-      when 4    then King.new([back_row, col], self, color)
-      end
+    row.each_with_index do |piece, col|
+      piece.new([back_row, col], self, color)
     end
   end
 
@@ -143,9 +145,7 @@ class Board
   def all_moves(color)
     all_moves = []
 
-    all_pieces(color).each do |piece|
-      all_moves += piece.moves
-    end
+    all_pieces(color).each { |piece| all_moves += piece.moves }
 
     all_moves.uniq
   end
@@ -153,21 +153,13 @@ class Board
   def all_valid_moves(color)
     all_valid_moves = []
 
-    all_pieces(color).each do |piece|
-      all_valid_moves += piece.valid_moves
-    end
+    all_pieces(color).each { |piece| all_valid_moves += piece.valid_moves }
 
     all_valid_moves.uniq
   end
 
   def all_pieces(color)
-    pieces = []
-
-    @board.flatten.each do |piece|
-      next if piece.nil?
-      pieces << piece if piece.color == color
-    end
-
-    pieces
+    @board.flatten.select { |piece| piece && piece.color == color }
   end
+
 end

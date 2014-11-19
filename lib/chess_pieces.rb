@@ -1,10 +1,14 @@
 # encoding: utf-8
+
 class Piece
   attr_writer :pos
   attr_reader :pos, :color
 
+
   def initialize(pos, board, color)
     @pos, @board, @color = pos, board, color
+    #piece places self
+    @board[@pos] = self
   end
 
   def moves
@@ -29,7 +33,7 @@ class Piece
   end
 
   protected
-  
+
   def is_enemy?(piece)
     self.color != piece.color
   end
@@ -121,8 +125,6 @@ class SteppingPiece < Piece
 
     moves
   end
-
-
 
 end
 
