@@ -14,9 +14,7 @@ class Game
 
     begin
 
-      @game_board.render
-
-      start, end_pos = current_player.get_move
+      start, end_pos = current_player.get_move(@game_board)
 
       raise "Not your piece" if @game_board[start].color != current_player.color
 
@@ -41,7 +39,10 @@ class HumanPlayer
     @color = color
   end
 
-  def get_move
+  def get_move(game_board)
+    game_board.render
+    puts "#{@color.to_s.capitalize}'s turn"
+    puts "You are in check" if game_board.in_check(@color)
     puts "Which piece would you like to move?"
     start = gets.chomp.split('')
     puts "Where would you like to move it?"
