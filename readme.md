@@ -19,11 +19,12 @@ During your turn you will be prompted for a starting position and an ending posi
 
 ###Features
 - Graphical interface with unicode representations of chess pieces.
-- Saving and loading of game state, including the current player.
+- Saving and loading of game state using YAML.
 - Error handling and rejection of invalid/illegal moves.
 - The user is allowed to choose again after making an invalid move (ex: trying to castle inappropriately).
 - You cannot move into check.
-- You can castle when conditions permit.
+- You can castle and en passant when conditions permit.
 - You can promote your pawns if they hit the end of the board. Computers will always choose a queen (as should you).
 - All pieces inherit from sliding or stepping piece classes in order to keep code DRY.
 - Multiple AI classes using different heuristics to determine behavior.
+- Deeply duplicates board to check for valid moves/check.
