@@ -180,7 +180,7 @@ class ControlComputerPlayer
           target_move = move
           break
         end
-        next if @game_board.dup.move!(piece.pos, move).all_moves(enemy).include?(move) || stalemate?([piece.pos, move])
+        next if @game_board.dup.move!(piece.pos, move).all_moves(enemy).include?(move)
         value = get_move_control_value(piece, move)
         if (value >= control_value && piece.class != King) ||
           (value > control_value && piece.class == King)
