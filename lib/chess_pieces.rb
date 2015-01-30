@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 class ChessError < StandardError
 end
 
@@ -13,7 +11,6 @@ class Piece
 
   def initialize(pos, board, color, has_moved = false)
     @pos, @board, @color = pos, board, color
-    #piece places self
     @board[@pos] = self
     @has_moved = has_moved
   end
@@ -25,16 +22,13 @@ class Piece
   def dup(board)
     self.class.new(@pos, board, @color)
   end
-############################################
+
   def move_into_check?(pos)
     test_board = @board.dup
-    p test_board[self.pos].class
-    p self.pos
-    p pos
+    return false if !@board.valid_pos?(pos[0], pos[1])
     test_board.move!(self.pos, pos)
     test_board.in_check?(self.color)
   end
-############################################
 
   def valid_moves
     self.moves.reject { |move| move_into_check?(move) }
@@ -173,12 +167,16 @@ class King < SteppingPiece
     difference = start[1] - end_pos[1]
     return if difference.abs == 1
 
+
+
+
     if difference > 0
       rook_pos = [@pos.first, 0]
+      return if !@board[rook_pos].is_a? Rook
       @board.move!(rook_pos, [rook_pos[0], rook_pos[1] + 3])
     else
       rook_pos = [@pos.first, 7]
-
+      return if !@board[rook_pos].is_a? Rook
       @board.move!(rook_pos, [rook_pos[0], rook_pos[1] - 2])
     end
   end
@@ -268,25 +266,30 @@ class Pawn < Piece
 
 
   def promote
-    puts 'What would you like to promote your pawn to?'
-    begin
-      response = Object.const_get(gets.chomp.capitalize)
-      if response == King || response == Pawn
-        raise PromotionError.new("Cannot promote to #{response}")
+    owner = @board.players.find {|player| player.color == self.color}
+    if owner.class == HumanPlayer
+      puts 'What would you like to promote your pawn to?'
+      begin
+        response = Object.const_get(gets.chomp.capitalize)
+        if response == King || response == Pawn
+          raise PromotionError.new("Cannot promote to #{response}")
+        end
+      rescue PromotionError => e
+        puts e.message
+        retry
       end
-    rescue PromotionError => e
-      puts e.message
-      retry
-    end
 
-    response.new(@pos, @board, @color, true)
+      response.new(@pos, @board, @color, true)
+    else
+      Queen.new(@pos, @board, @color, true)
+    end
   end
 
   private
 
   def forward_moves
     moves = []
-    operator = @color == :white ? :- : :+ # metaprogramming!!
+    operator = @color == :white ? :- : :+
 
     x, y = @pos
     FORWARDS.each do |(dx, dy)|
@@ -300,7 +303,7 @@ class Pawn < Piece
 
   def diag_moves
     moves = []
-    operator = @color == :white ? :- : :+ # metaprogramming!!
+    operator = @color == :white ? :- : :+
 
     x, y = @pos
     DIAGONALS.each do |(dx, dy)|

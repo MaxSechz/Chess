@@ -1,6 +1,6 @@
 require 'yaml'
 require_relative 'board.rb'
-
+require_relative 'players.rb'
 class EnemyPieceError < ChessError
   def message
     "You chose an enemy piece!"
@@ -12,17 +12,18 @@ class Game
   attr_reader :game_board
 
   def initialize(white, black, board = nil)
-    @white, @black = white, black
-    board ||= Board.new
+    @players = [white, black]
+    board ||= Board.new(@players)
     @game_board = board
-    @current_player = @white
+    @turn = 1.0
   end
 
   def run
 
     until over?
       begin
-        start, end_pos = @current_player.get_move(@game_board)
+
+        start, end_pos = current_player.get_move(@game_board)
         if start == :save
           save_game
           redo
@@ -30,6 +31,9 @@ class Game
           return
         end
         @game_board.move(start, end_pos)
+        stalemate_count([start, end_pos])
+        puts "Turn #{@turn.to_i}"
+        @turn += 0.5
         switch_player
 
       rescue ChessError => e
@@ -52,94 +56,40 @@ class Game
   private
 
   def over?
-    @game_board.checkmate?(@current_player.color) ||
-    @game_board.stalemate?(@current_player.color)
+    @game_board.checkmate?(current_player.color) ||
+    stalemate?
+  end
+
+  def stalemate?
+    @game_board.stalemate?(current_player.color) || @players[1].moves_in_row == 6
   end
 
   def end_game
+    @game_board.render
     # current player is in checkmate
-    if @game_board.stalemate?(@current_player.color)
+    if stalemate?
       puts "Stalemate"
     else
       switch_player
 
-      puts "Congratulations, #{@current_player.color.to_s.capitalize}!"
+      puts "Congratulations, #{current_player.color.to_s.capitalize}!"
       puts "You won!"
     end
   end
 
+  def stalemate_count(move)
+    if current_player.last_move == move.reverse
+      current_player.moves_in_row += 1
+    end
+
+    current_player.last_move = move
+  end
 
   def switch_player
-    @current_player = @current_player == @white ? @black : @white
+    @players.reverse!
   end
 
-
-end
-
-class HumanPlayer
-
-  attr_reader :color
-
-  def initialize(color)
-    @color = color
+  def current_player
+    @players[0]
   end
-
-  def get_move(game_board)
-    game_board.render
-    puts "#{@color.to_s.capitalize}'s turn"
-    puts "You are in check" if game_board.in_check?(@color)
-    puts
-    puts "Enter 'save' to save, 'quit' to quit"
-    puts "Press any key to continue"
-
-    response = gets.chomp.downcase
-    return response.to_sym if response == "save" || response == "quit"
-
-    puts "Which piece would you like to move?"
-    start = gets.chomp.split('')
-    puts "Where would you like to move it?"
-    end_pos = gets.chomp.split('')
-    start, end_pos = convert(start), convert(end_pos)
-
-    raise EnemyPieceError if game_board[start] &&
-                             game_board[start].color != self.color
-
-    [start, end_pos]
-  end
-
-  def convert(position)
-    first = position[0].ord - 'a'.ord
-    second = 8 - position[1].to_i
-
-    [second, first]
-  end
-
-end
-
-class ComputerPlayer
-
-  attr_reader :color
-
-  def initialize(color)
-    @color = color
-  end
-
-  def get_move(game_board)
-    @game_board = game_board
-
-    game_board.render
-    puts "#{@color.to_s.capitalize}'s turn"
-    puts "You are in check" if game_board.in_check?(@color)
-
-    while true
-      piece = @game_board.all_pieces(@color).sample
-
-      move = piece.valid_moves.sample
-
-      break unless move.nil?
-    end
-    sleep 1
-    [piece.pos, move]
-  end
-
 end

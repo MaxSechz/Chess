@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require_relative 'chess_pieces.rb'
 
 class ChessError < StandardError
@@ -27,9 +29,9 @@ end
 
 class Board
 
-  def initialize
+  def initialize(players)
     @board = Array.new(8) {Array.new(8)}
-
+    @players = players
     initialize_sides
   end
 
@@ -37,18 +39,12 @@ class Board
     piece = self[start]
 
     raise PieceSelectionError if piece.nil?
-    # potential board change from these checks for computer player
     raise InCheckError if piece.move_into_check?(end_pos)
     raise InvalidMoveError unless piece.valid_moves.include?(end_pos)
 
     move!(start, end_pos)
-    if piece.is_a?(Pawn) && (start[0] - end_pos[0]).abs == 2
-      piece.has_moved = :two_spaces
-    else
-      piece.has_moved = true
-    end
-    piece.en_passant(start) if piece.is_a?(Pawn)
     piece.promote if piece.is_a?(Pawn) && (end_pos[0] == 0 || end_pos[0] == 7)
+    self
   end
 
   def move!(start, end_pos)
@@ -56,16 +52,21 @@ class Board
     # raise PieceSelectionError if piece.nil?
 
     piece.castle(start, end_pos) if piece.is_a?(King)
-
     self[start] = nil
     self[end_pos] = piece
     piece.pos = end_pos
-
+      if piece.is_a?(Pawn) && (start[0] - end_pos[0]).abs == 2
+      piece.has_moved = :two_spaces
+    else
+      piece.has_moved = true
+    end
+    piece.en_passant(start) if piece.is_a?(Pawn)
+    self
   end
 
   # have each piece place itself on board
   def dup
-    dupped_board = Board.new
+    dupped_board = Board.new(@players)
 
     @board.each_index do |row|
       @board[row].each_with_index do |piece, col|
@@ -100,14 +101,18 @@ class Board
 
   def [](pos)
     x,y = pos
-    return nil unless x.between?(0,7) && y.between?(0,7)
+    return nil unless valid_pos?(x, y)
     @board[x][y]
   end
 
   def []=(pos, value)
     x,y = pos
-    raise InvalidPositionError unless x.between?(0,7) && y.between?(0,7)
+    raise InvalidPositionError unless valid_pos?(x, y)
     @board[x][y] = value
+  end
+
+  def valid_pos?(x, y)
+    x.between?(0,7) && y.between?(0,7)
   end
 
   def stalemate?(color)
@@ -123,7 +128,6 @@ class Board
 
   def in_check?(color)
     king = find_king(color)
-
     all_moves(enemy_color(color)).include?(king.pos)
   end
 
@@ -131,10 +135,28 @@ class Board
     @board.flatten.select { |piece| piece && piece.color == color }
   end
 
+  def all_moves(color)
+    all_moves = []
+    all_pieces(color).each { |piece| all_moves += piece.moves }
+    all_moves.uniq
+  end
+
+  def all_valid_moves(color)
+    all_valid_moves = []
+    all_pieces(color).each { |piece| all_valid_moves += piece.valid_moves }
+    all_valid_moves.uniq
+  end
+
+  def non_uniq_valid_moves(color)
+    all_valid_moves = []
+    all_pieces(color).each { |piece| all_valid_moves += piece.valid_moves }
+  end
+
   private
 
   def find_king(color)
-    all_pieces(color).select { |piece| piece.is_a?(King) }.first
+    king = all_pieces(color).select { |piece| piece.is_a?(King) }.first
+    king
   end
 
   def initialize_sides
@@ -156,22 +178,6 @@ class Board
 
   def enemy_color(color)
     color == :white ? :black : :white
-  end
-
-  def all_moves(color)
-    all_moves = []
-
-    all_pieces(color).each { |piece| all_moves += piece.moves }
-
-    all_moves.uniq
-  end
-
-  def all_valid_moves(color)
-    all_valid_moves = []
-
-    all_pieces(color).each { |piece| all_valid_moves += piece.valid_moves }
-
-    all_valid_moves.uniq
   end
 
 end
