@@ -3,7 +3,7 @@
 This is the classic board game for the terminal written in Ruby!
 It can be played between two human opponents, a human and a computer, or even a computer against another computer.
 Comes complete with several AI classes to choose from. They range in competence from completely useless, to only mildly useless.
-AI number 7, or the "Smartest AI" is the most advanced and can beat (or draw in the case of the Greedy AI, which will always try to get a draw) all the other AIs.
+AI number 7, or the "Smartest AI" is the most advanced and can beat (or draw in the case of the Greedy AI, which will always try to get a draw) all the other AIs, including itself.
 They each apply slightly different heuristics to their move selection. Random Computer selects moves entirely at random.
 Checkmate Computer does the same, but will checkmate if possible. Safe Computer will also checkmate if possible, and will never move its own pieces into danger for any reason.
 Control Computer will attempt to gain the most board control, that is have immediate access to as many squares as possible.
