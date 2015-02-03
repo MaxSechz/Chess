@@ -37,9 +37,11 @@ class Game
         switch_player
 
       rescue ChessError => e
-        puts e.message
+        @message = e.message
         retry
       end
+
+      puts @message if @message
     end
 
     end_game

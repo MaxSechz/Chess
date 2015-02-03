@@ -15,24 +15,25 @@ class HumanPlayer
     puts "You are in check" if game_board.in_check?(@color)
     puts
     puts "Enter 'save' to save, 'quit' to quit"
-    puts "Press any key to continue"
-
-    response = gets.chomp.downcase
-    return response.to_sym if response == "save" || response == "quit"
-
     puts "Which piece would you like to move?"
+
     start = gets.chomp.split('')
+    return start.to_sym if start == "save" || start == "quit"
+    start = convert(start)
     puts "Where would you like to move it?"
     end_pos = gets.chomp.split('')
-    start, end_pos = convert(start), convert(end_pos)
+    return end_pos.to_sym if end_pos == "save" || end_pos == "quit"
+    end_pos = convert(end_pos)
 
     raise EnemyPieceError if game_board[start] &&
-    game_board[start].color != self.color
-
+            game_board[start].color != self.color
+            
     [start, end_pos]
   end
 
   def convert(position)
+    raise InvalidPositionError if !("a".."z").include?(position[0]) ||
+                                  !("1".."8").include?(position[1])
     first = position[0].ord - 'a'.ord
     second = 8 - position[1].to_i
 

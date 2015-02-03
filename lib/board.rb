@@ -24,6 +24,9 @@ class InvalidMoveError < ChessError
 end
 
 class InvalidPositionError < ChessError
+  def message
+    "Thats not a real place"
+  end
 end
 
 
